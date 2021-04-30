@@ -2,7 +2,7 @@
 
 set -e
 
-TAGS="most sqlite_app_armor sqlite_fts5 sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable"
+TAGS="most sqlite_app_armor sqlite_fts5 sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable osusergo netgo"
 
 SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd))
 
@@ -50,9 +50,10 @@ if [ -d $DIR ]; then
 fi
 mkdir -p $DIR
 echo "BUILDING:    $BIN"
+#export CGO_CFLAGS=-DU_STATIC_IMPLEMENTATION
 go build \
-    -tags "$TAGS" \
-    -ldflags="-s -w -X github.com/xo/usql/text.CommandName=$NAME -X github.com/xo/usql/text.CommandVersion=$VER" \
+    -tags "$TAGS " \
+    -ldflags="-s -w -X github.com/xo/usql/text.CommandName=$NAME -X github.com/xo/usql/text.CommandVersion=$VER -linkmode=external -extldflags \"-static -L/home/jwas/src/icu-static/pkg/icu-static/usr/lib -licuuc -licui18n -licudata -lm -ldl\" -extld g++" \
     -o $BIN
 case $PLATFORM in
     linux | windows | darwin)

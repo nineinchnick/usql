@@ -1,0 +1,7 @@
+FROM centos as base
+
+RUN echo root::0:0::/:/bin/bash > /tmp/passwd
+
+FROM scratch
+
+COPY --from=base /tmp/passwd /etc/passwd
