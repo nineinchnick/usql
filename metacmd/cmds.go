@@ -767,6 +767,69 @@ func init() {
 				return nil
 			},
 		},
+		Stats: {
+			Section: SectionInformational,
+			Name:    "ss[+]",
+			Desc:    "show all stats for a table or a query,[TABLE|QUERY]",
+			Aliases: map[string]string{
+				"ssc": "show count,[TABLE|QUERY]",
+				"ssm": "show mean,[TABLE|QUERY]",
+				"sss": "show standard deviation,[TABLE|QUERY]",
+				"ssl": "show low bound (minimum value),[TABLE|QUERY]",
+				"ssh": "show high bound (maximum value),[TABLE|QUERY]",
+				"ssu": "show number of unique values,[TABLE|QUERY]",
+				"ssp": "show percentiles,[TABLE|QUERY] [p[,pN]]",
+				"ssk": "show k most common values,[TABLE|QUERY] [k]",
+				"ssf": "show k most common value's frequency,[TABLE|QUERY] [k]",
+			},
+			Process: func(p *Params) error {
+				verbose := strings.ContainsRune(p.Name, '+')
+				name := strings.TrimRight(p.Name, "+")
+				pattern, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+				defer cancel()
+				k := 0
+				percentiles := []float64{}
+				if verbose {
+					k = 3
+					percentiles = []float64{0.25, 0.5, 0.75}
+				}
+				switch name {
+				case "ss":
+					pattern = "cmslhupkf"
+				case "ssk", "ssf":
+					ok, val, err := p.GetOK(true)
+					if err != nil {
+						return err
+					}
+					if ok {
+						k, err = strconv.Atoi(val)
+						if err != nil {
+							return err
+						}
+					}
+				case "ssp":
+					ok, val, err := p.GetOK(true)
+					if err != nil {
+						return err
+					}
+					if ok {
+						percentiles = []float64{}
+						for _, v := range strings.Split(val, ",") {
+							f, err := strconv.ParseFloat(v, 64)
+							if err != nil {
+								return err
+							}
+							percentiles = append(percentiles, f)
+						}
+					}
+				}
+				return p.Handler.ShowStats(ctx, name, pattern, k, percentiles)
+			},
+		},
 		Copy: {
 			Section: SectionInputOutput,
 			Name:    "copy",

@@ -782,6 +782,18 @@ func (h *Handler) Version(ctx context.Context) error {
 	return nil
 }
 
+// ShowStats prints the database version information after a successful connection.
+func (h *Handler) ShowStats(ctx context.Context, name, pattern string, k int, percentiles []float64) error {
+	if h.db == nil {
+		return text.ErrNotConnected
+	}
+	sqlstr, err := drivers.StatsQuery(ctx, h.u, h.DB(), name, pattern, k, percentiles)
+	if err != nil {
+		return err
+	}
+	return h.query(ctx, h.out, metacmd.Option{}, "", sqlstr)
+}
+
 // Print formats according to a format specifier and writes to handler's standard output.
 func (h *Handler) Print(format string, a ...interface{}) {
 	if env.Get("QUIET") == "on" {

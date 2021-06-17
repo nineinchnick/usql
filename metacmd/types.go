@@ -65,6 +65,8 @@ type Handler interface {
 	MetadataWriter(context.Context) (metadata.Writer, error)
 	// Print formats according to a format specifier and writes to handler's standard output.
 	Print(string, ...interface{})
+	// ShowStats for a table or a query
+	ShowStats(context.Context, string, string, int, []float64) error
 }
 
 // Runner is a runner interface type.

@@ -103,6 +103,8 @@ type Driver struct {
 	NewCompleter func(db DB, opts ...completer.Option) readline.AutoCompleter
 	// Copy rows into the database table
 	Copy func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error)
+	// StatsQuery for a table or query
+	StatsQuery func(ctx context.Context, db DB, name, pattern string, k int, percentiles []float64) (string, error)
 }
 
 // drivers is the map of drivers funcs.
@@ -582,4 +584,16 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 		}
 		return n, rows.Err()
 	}
+}
+
+// StatsQuery for a table or a query.
+func StatsQuery(ctx context.Context, u *dburl.URL, db DB, name, pattern string, k int, percentiles []float64) (string, error) {
+	d, ok := drivers[u.Driver]
+	if !ok {
+		return "", WrapErr(u.Driver, text.ErrDriverNotAvailable)
+	}
+	if d.StatsQuery == nil {
+		return "", fmt.Errorf(text.NotSupportedByDriver, `ss`)
+	}
+	return d.StatsQuery(ctx, db, name, pattern, k, percentiles)
 }
